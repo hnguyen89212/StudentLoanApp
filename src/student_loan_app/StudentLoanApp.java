@@ -1,9 +1,19 @@
 package student_loan_app;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import java.sql.*;
+import back_end_db.StudentDB;
 
 /**
  * DOCUMENTATION<br>
@@ -22,14 +32,6 @@ import java.util.ArrayList;
 public class StudentLoanApp extends JFrame {
 
 	// ------------------------------------------
-	// DUMMY DATA SET FOR TESTING
-	// ------------------------------------------
-	private static Student s1 = new Student("0904995", "Nguyen", "Phuc", "Hai", "342", "123", "Okanagan", "London",
-			"Ontario", "N5X 4Y3", 2500.0, 1500);
-	private static Student s2 = new Student("0087901", "Le", "Nhat", "Minh", "460", "437", "Beckworth", "Guelph",
-			"Ontario", "M6R 0T5", 23400.0, 12.34);
-
-	// ------------------------------------------
 	// CONSTANTS
 	// ------------------------------------------
 	private static final String AUTHOR = "Hai Nguyen";
@@ -40,8 +42,6 @@ public class StudentLoanApp extends JFrame {
 	// ------------------------------------------
 	// INSTANCE VARIABLES
 	// ------------------------------------------
-	// storage
-	private ArrayList<Student> students;
 	// title bar
 	private JLabel titleLabel;
 	// studentid
@@ -76,6 +76,8 @@ public class StudentLoanApp extends JFrame {
 	private JLabel messageBoardLabel;
 	// main panel
 	private JPanel mainPanel;
+	// check button, to verify existence of user
+	private JButton checkIDBtn;
 
 	// ------------------------------------------
 	// CONSTRUCTOR
@@ -104,13 +106,6 @@ public class StudentLoanApp extends JFrame {
 	 * host frame
 	 */
 	private void initialize() {
-		this.students = new ArrayList<Student>();
-		// --------------------------------------
-		// FOR DEBUGGING
-		// --------------------------------------
-		this.students.add(s1);
-		this.students.add(s2);
-
 		this.titleLabel = new JLabel("This is " + AUTHOR + "'s Student Loan Calculator");
 		JPanel panel0 = new JPanel();
 		panel0.add(this.titleLabel);
@@ -127,9 +122,21 @@ public class StudentLoanApp extends JFrame {
 		this.postalcodeInput = new JTextField();
 		this.cslInput = new JTextField();
 		this.oslInput = new JTextField();
-		JPanel panel1 = new JPanel(new GridLayout(12, 2, 2, 2));
+
+		this.addStudentBtn = new JButton("Add");
+		this.addStudentBtn.addActionListener(new AddStudentListener());
+		this.clearInputBtn = new JButton("Clear Form");
+		this.clearInputBtn.addActionListener(new ClearFormListener());
+		this.processStudentBtn = new JButton("Process");
+		this.processStudentBtn.addActionListener(new ProcessStudentListener());
+		this.checkIDBtn = new JButton("Check");
+		this.checkIDBtn.addActionListener(new CheckStudentIDListener());
+
+		JPanel panel1 = new JPanel(new GridLayout(13, 2, 2, 2)); // one new row added for "Check" button
 		panel1.add(new JLabel("Student ID: "));
 		panel1.add(this.studentIDInput);
+		panel1.add(new JLabel("Check Student ID:"));
+		panel1.add(this.checkIDBtn);
 		panel1.add(new JLabel("Surname: "));
 		panel1.add(this.surnameInput);
 		panel1.add(new JLabel("Middle name: "));
@@ -153,12 +160,6 @@ public class StudentLoanApp extends JFrame {
 		panel1.add(new JLabel("OSL: "));
 		panel1.add(this.oslInput);
 
-		this.addStudentBtn = new JButton("Add");
-		this.addStudentBtn.addActionListener(new AddStudentListener());
-		this.clearInputBtn = new JButton("Clear Form");
-		this.clearInputBtn.addActionListener(new ClearFormListener());
-		this.processStudentBtn = new JButton("Process");
-		this.processStudentBtn.addActionListener(new ProcessStudentListener());
 		JPanel panel2 = new JPanel(new GridLayout(1, 3, 2, 2));
 		panel2.add(this.addStudentBtn);
 		panel2.add(this.clearInputBtn);
@@ -216,22 +217,29 @@ public class StudentLoanApp extends JFrame {
 			boolean validID = HN_LoanTools.validateStudentID(id);
 			if (!validID)
 				throw new Exception("Invalid Student ID");
+			String student_id = this.studentIDInput.getText();
 			String surname = this.surnameInput.getText();
 			String middlename = this.middlenameInput.getText();
 			String firstname = this.firstnameInput.getText();
-			String aptNumber = this.aptNumberInput.getText();
-			String streetNumber = this.streetNumberInput.getText();
-			String streetName = this.streetNameInput.getText();
+			int aptnumber = Integer.parseInt(this.aptNumberInput.getText());
+			int streetnumber;
+			if (this.streetNumberInput.getText().isEmpty()) {
+				streetnumber = 0;
+			} else {
+				streetnumber = Integer.parseInt(this.streetNumberInput.getText());
+			}
+			String streetname = this.streetNameInput.getText();
 			String city = this.cityInput.getText();
 			String province = this.provinceInput.getText();
 			String postalcode = this.postalcodeInput.getText();
 			double csl = Double.parseDouble(this.cslInput.getText());
 			double osl = Double.parseDouble(this.oslInput.getText());
-			Student std = new Student(id, surname, middlename, firstname, aptNumber, streetNumber, streetName, city,
-					province, postalcode, csl, osl);
-			this.students.add(std);
+			// add to db
+			StudentDB.addNewStudent(student_id, surname, middlename, firstname, aptnumber, streetnumber, streetname,
+					city, province, postalcode, csl, osl);
 			this.messageBoardLabel.setText("Student is successfully added!");
 		} catch (Exception exc) {
+			System.out.println(exc.getMessage());
 			this.messageBoardLabel.setText("Something went wrong! Try again!");
 		} finally {
 			clearInput();
@@ -241,14 +249,6 @@ public class StudentLoanApp extends JFrame {
 	// ------------------------------------------
 	// PRIVATE LISTENER CLASSES
 	// ------------------------------------------
-	private class ClearFormListener implements ActionListener {
-		@Override
-		public void actionPerformed(ActionEvent evt) {
-			clearMessageBoard();
-			clearInput();
-		}
-	}
-
 	private class AddStudentListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent evt) {
@@ -257,10 +257,60 @@ public class StudentLoanApp extends JFrame {
 		}
 	}
 
+	private class ClearFormListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent evt) {
+			clearMessageBoard();
+			clearInput();
+		}
+	}
+
 	private class ProcessStudentListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent evt) {
-			new RepaymentCalculationForm(students);
+
+		}
+	}
+
+	private class CheckStudentIDListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent evt) {
+			String idInput = studentIDInput.getText();
+			ResultSet rs = StudentDB.checkStudentId(idInput);
+			int rowCount = 0;
+			try {
+				// determine number of rows
+				if (rs.last()) {
+					rowCount = rs.getRow();
+					rs.beforeFirst();
+				}
+				if (rowCount > 0) {
+					// reset cursor to first set
+					rs.first();
+					addStudentBtn.setEnabled(false);
+					surnameInput.setText(rs.getString("surname"));
+					middlenameInput.setText(rs.getString("middle_name"));
+					firstnameInput.setText(rs.getString("first_name"));
+					aptNumberInput.setText(rs.getString("apt_number"));
+					streetNumberInput.setText(rs.getString("street_number"));
+					streetNameInput.setText(rs.getString("street_name"));
+					cityInput.setText(rs.getString("city"));
+					provinceInput.setText(rs.getString("province"));
+					postalcodeInput.setText(rs.getString("postal_code"));
+					cslInput.setText(rs.getString("csl_loan_amount"));
+					oslInput.setText(rs.getString("osl_loan_amount"));
+					;
+					messageBoardLabel.setText("Student already exists in database.");
+				} else {
+					addStudentBtn.setEnabled(true);
+					messageBoardLabel.setText("Student does not exist in database.");
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+
 		}
 	}
 }
+
+// 0904995
