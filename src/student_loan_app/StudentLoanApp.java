@@ -4,7 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+// import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -78,6 +78,10 @@ public class StudentLoanApp extends JFrame {
 	private JPanel mainPanel;
 	// check button, to verify existence of user
 	private JButton checkIDBtn;
+	// update button, to change student info
+	private JButton updateStudentBtn;
+	// delete button, to remove student
+	private JButton deleteStudentBtn;
 
 	// ------------------------------------------
 	// CONSTRUCTOR
@@ -129,10 +133,14 @@ public class StudentLoanApp extends JFrame {
 		this.clearInputBtn.addActionListener(new ClearFormListener());
 		this.processStudentBtn = new JButton("Process");
 		this.processStudentBtn.addActionListener(new ProcessStudentListener());
-		this.checkIDBtn = new JButton("Check");
+		this.checkIDBtn = new JButton("Check Student in DB");
 		this.checkIDBtn.addActionListener(new CheckStudentIDListener());
+		this.updateStudentBtn = new JButton("Update Student");
+		this.updateStudentBtn.addActionListener(new UpdateStudentListener());
+		//
+		this.deleteStudentBtn = new JButton("Delete Student");
 
-		JPanel panel1 = new JPanel(new GridLayout(13, 2, 2, 2)); // one new row added for "Check" button
+		JPanel panel1 = new JPanel(new GridLayout(14, 2, 2, 2)); // one new row added for "Check" button
 		panel1.add(new JLabel("Student ID: "));
 		panel1.add(this.studentIDInput);
 		panel1.add(new JLabel("Check Student ID:"));
@@ -159,6 +167,8 @@ public class StudentLoanApp extends JFrame {
 		panel1.add(this.cslInput);
 		panel1.add(new JLabel("OSL: "));
 		panel1.add(this.oslInput);
+		panel1.add(this.updateStudentBtn);
+		panel1.add(this.deleteStudentBtn);
 
 		JPanel panel2 = new JPanel(new GridLayout(1, 3, 2, 2));
 		panel2.add(this.addStudentBtn);
@@ -194,6 +204,11 @@ public class StudentLoanApp extends JFrame {
 	 */
 	private void clearInput() {
 		this.studentIDInput.setText("");
+		clearInputExceptID();
+		this.studentIDInput.requestFocus();
+	}
+
+	private void clearInputExceptID() {
 		this.surnameInput.setText("");
 		this.middlenameInput.setText("");
 		this.firstnameInput.setText("");
@@ -205,7 +220,25 @@ public class StudentLoanApp extends JFrame {
 		this.postalcodeInput.setText("");
 		this.cslInput.setText("");
 		this.oslInput.setText("");
-		this.studentIDInput.requestFocus();
+	}
+
+	/**
+	 * Validate inputs in primary form Every field must be filled except for street
+	 * number
+	 * 
+	 * @throws HN_MissingInfoInPrimaryForm
+	 */
+	private void validatePrimaryForm() throws HN_MissingInfoInPrimaryForm {
+		boolean passed = (!this.studentIDInput.getText().isEmpty() && !this.surnameInput.getText().isEmpty()
+				&& !this.middlenameInput.getText().isEmpty() && !this.firstnameInput.getText().isEmpty()
+				&& !this.aptNumberInput.getText().isEmpty() && !this.streetNameInput.getText().isEmpty()
+				&& !this.cityInput.getText().isEmpty() && !this.provinceInput.getText().isEmpty()
+				&& !this.postalcodeInput.getText().isEmpty() && !this.cslInput.getText().isEmpty()
+				&& !this.oslInput.getText().isEmpty());
+		if (!passed) {
+			HN_LoanTools.showMissingInfoInPrimaryForm();
+			throw new HN_MissingInfoInPrimaryForm();
+		}
 	}
 
 	/**
@@ -246,6 +279,45 @@ public class StudentLoanApp extends JFrame {
 		}
 	}
 
+	private void updateStudent() {
+		try {
+			String id = this.studentIDInput.getText();
+			boolean validID = HN_LoanTools.validateStudentID(id);
+			if (!validID)
+				throw new Exception("Invalid Student ID");
+			String student_id = this.studentIDInput.getText();
+			String surname = this.surnameInput.getText();
+			String middlename = this.middlenameInput.getText();
+			String firstname = this.firstnameInput.getText();
+			int aptnumber = Integer.parseInt(this.aptNumberInput.getText());
+			int streetnumber;
+			if (this.streetNumberInput.getText().isEmpty()) {
+				streetnumber = 0;
+			} else {
+				streetnumber = Integer.parseInt(this.streetNumberInput.getText());
+			}
+			String streetname = this.streetNameInput.getText();
+			String city = this.cityInput.getText();
+			String province = this.provinceInput.getText();
+			String postalcode = this.postalcodeInput.getText();
+			double csl = Double.parseDouble(this.cslInput.getText());
+			double osl = Double.parseDouble(this.oslInput.getText());
+			// update new info in db
+			boolean success = StudentDB.updateStudent(student_id, surname, middlename, firstname, aptnumber,
+					streetnumber, streetname, city, province, postalcode, csl, osl);
+			if (!success) {
+				this.messageBoardLabel.setText("Something went wrong! Try again!");
+			} else {
+				this.messageBoardLabel.setText("Student is successfully updated!");
+			}
+		} catch (Exception exc) {
+			System.out.println(exc.getMessage());
+			this.messageBoardLabel.setText("Something went wrong! Try again!");
+		} finally {
+			clearInput();
+		}
+	}
+
 	// ------------------------------------------
 	// PRIVATE LISTENER CLASSES
 	// ------------------------------------------
@@ -253,6 +325,12 @@ public class StudentLoanApp extends JFrame {
 		@Override
 		public void actionPerformed(ActionEvent evt) {
 			clearMessageBoard();
+			try {
+				validatePrimaryForm();
+			} catch (HN_MissingInfoInPrimaryForm e) {
+				e.printStackTrace();
+				return;
+			}
 			addStudent();
 		}
 	}
@@ -304,11 +382,26 @@ public class StudentLoanApp extends JFrame {
 				} else {
 					addStudentBtn.setEnabled(true);
 					messageBoardLabel.setText("Student does not exist in database.");
+					clearInputExceptID();
 				}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 
+		}
+	}
+
+	private class UpdateStudentListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent evt) {
+			clearMessageBoard();
+			try {
+				validatePrimaryForm();
+			} catch (HN_MissingInfoInPrimaryForm e) {
+				e.printStackTrace();
+				return;
+			}
+			updateStudent();
 		}
 	}
 }
