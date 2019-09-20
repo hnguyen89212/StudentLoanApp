@@ -13,16 +13,15 @@ package student_loan_app;
  * <p>
  * Project : Student Loan GUI App<br>
  * <p>
- * Program : HN_MissingInfoInPrimaryForm.java<br>
+ * Program : HN_MissingIDException.java<br>
  * <p>
- * Description : A class to simulate an exception when user does not input for
- * any text field other than street number (they are required, except for street
- * number).
+ * Description : A class to simulate an exception when user does not specify
+ * Student ID.
  * <p>
  * Dependencies : none<br>
  */
 
-public class HN_MissingInfoInPrimaryForm extends Exception {
+public class HN_MissingIDException extends Exception {
 
 	/**
 	 * 
@@ -32,8 +31,8 @@ public class HN_MissingInfoInPrimaryForm extends Exception {
 	// ------------------------------------------
 	// CONSTRUCTOR
 	// ------------------------------------------
-	public HN_MissingInfoInPrimaryForm() {
-		super("Error: A field is missing information. All fields except for street number must be filled.");
+	public HN_MissingIDException() {
+		super("Error: ID is missing. Operation aborted.");
 	}
 
 }

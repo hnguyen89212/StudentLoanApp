@@ -7,21 +7,32 @@ import java.util.ArrayList;
 
 /**
  * DOCUMENTATION<br>
- * <br>
+ * <p>
  * Author : Hai Nguyen<br>
+ * <p>
  * Student ID : 0904995<br>
+ * <p>
  * Professor : Madhavi Mohan<br>
+ * <p>
  * Class : INFO 3134 S2019<br>
+ * <p>
  * Project : Student Loan GUI App<br>
+ * <p>
  * Program : RepaymentCalculationForm.java<br>
+ * <p>
  * Description : A form to input "current annual interest rate" and
  * "amortization periods in months" to calculate payments.<br>
+ * <p>
  * Dependencies : Student.java, StudentLoanApp.java, HN_LoanTools.java,
  * HN_LoanPayable.java, HN_NegativeValueException.java<br>
  */
 
 public class RepaymentCalculationForm extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	// ------------------------------------------
 	// CONSTANTS
 	// ------------------------------------------
@@ -62,6 +73,10 @@ public class RepaymentCalculationForm extends JFrame {
 		super("Hai Nguyen's Student Loan App");
 		configureBehavior();
 		initialize(list);
+	}
+
+	public RepaymentCalculationForm() {
+		configureBehavior();
 	}
 
 	// ------------------------------------------

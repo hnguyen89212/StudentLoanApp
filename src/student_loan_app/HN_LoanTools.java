@@ -4,14 +4,21 @@ import javax.swing.*;
 
 /**
  * DOCUMENTATION <br>
- * <br>
+ * <p>
  * Author : Hai Nguyen <br>
+ * <p>
  * Student ID : 0904995 <br>
+ * <p>
  * Professor : Madhavi Mohan <br>
+ * <p>
  * Class : INFO 3134 S2019 <br>
+ * <p>
  * Project : Student Loan GUI App <br>
+ * <p>
  * Program : HN_LoanTools.java <br>
+ * <p>
  * Description : A class to store helper methods. <br>
+ * <p>
  * Dependencies : none <br>
  */
 
@@ -20,17 +27,21 @@ public class HN_LoanTools {
 	// ------------------------------------------
 	// CONSTANTS
 	// ------------------------------------------
-	public static final String EMPTY_INPUT_MESSAGE = "Amortization period and annual prime interest rate fields cannot be empty";
-	public static final String EMPTY_INPUT_TITLE = "Error on inputs: empty field(s)";
-	public static final String NON_NUMERIC_INPUT_MESSAGE = "Amortization period and annual prime interest rate fields can only accept numeric values";
-	public static final String NON_NUMERIC_INPUT_TITLE = "Error on inputs: non-numeric value(s)";
-	public static final String NOT_IN_QUARTER_PERCENT_INCREMENT_MESSAGE = "Annual prime interest rate must be in quarter percent increments";
-	public static final String NOT_IN_QUARTER_PERCENT_INCREMENT_TITLE = "Error on annual prime interest rate";
-	private static final int STUDENT_ID_LENGTH = 7;
+	private static final String EMPTY_INPUT_MESSAGE = "Amortization period and annual prime interest rate fields cannot be empty";
+	private static final String EMPTY_INPUT_TITLE = "Error on inputs: empty field(s)";
+	private static final String NON_NUMERIC_INPUT_MESSAGE = "Amortization period and annual prime interest rate fields can only accept numeric values";
+	private static final String NON_NUMERIC_INPUT_TITLE = "Error on inputs: non-numeric value(s)";
+	private static final String NOT_IN_QUARTER_PERCENT_INCREMENT_MESSAGE = "Annual prime interest rate must be in quarter percent increments";
+	private static final String NOT_IN_QUARTER_PERCENT_INCREMENT_TITLE = "Error on annual prime interest rate";
 	private static final String MISSING_INFO_IN_PRIMARY_FORM_MESSAGE = "A field is missing information. All fields except for street number must be filled.";
 	private static final String MISSING_INFO_IN_PRIMARY_FORM_TITLE = "Missing Information";
 	private static final String NO_RECORD_FOUND_MESSAGE = "Cannot update student: No record found.";
 	private static final String NO_RECORD_FOUND_TITLE = "No matching record.";
+	private static final String MISSING_ID_MESSAGE = "Error: ID is missing. Operation aborted.";
+	private static final String MISSING_ID_TITLE = "Missing ID";
+	private static final String INVALID_ID_MESSAGE = "Error: Student ID is invalid. Operation aborted.";
+	private static final String INVALID_ID_TITLE = "Invalid Student ID";
+	private static final int STUDENT_ID_LENGTH = 7;
 
 	/**
 	 * Validates the input in "current annual prime interest rate".
@@ -133,4 +144,11 @@ public class HN_LoanTools {
 		showErrorMessage(NO_RECORD_FOUND_MESSAGE, NO_RECORD_FOUND_TITLE);
 	}
 
+	public static void showMissingIDError() {
+		showErrorMessage(MISSING_ID_MESSAGE, MISSING_ID_TITLE);
+	}
+
+	public static void showInvalidStudentIDError() {
+		showErrorMessage(INVALID_ID_MESSAGE, INVALID_ID_TITLE);
+	}
 }

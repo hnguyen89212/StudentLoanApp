@@ -4,32 +4,42 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-// import java.util.ArrayList;
-
+import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-
 import java.sql.*;
 import back_end_db.StudentDB;
 
 /**
  * DOCUMENTATION<br>
- * <br>
+ * <p>
  * Author : Hai Nguyen<br>
+ * <p>
  * Student ID : 0904995<br>
+ * <p>
  * Professor : Madhavi Mohan<br>
+ * <p>
  * Class : INFO 3134 S2019<br>
+ * <p>
  * Project : Student Loan GUI App<br>
+ * <p>
  * Program : StudentLoanApp.java<br>
+ * <p>
  * Description : A form to add new students to storage, trigger source for
  * RepaymentCalculationForm.<br>
+ * <p>
  * Dependencies : Student.java<br>
  */
 
 public class StudentLoanApp extends JFrame {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	// ------------------------------------------
 	// CONSTANTS
@@ -139,6 +149,7 @@ public class StudentLoanApp extends JFrame {
 		this.updateStudentBtn.addActionListener(new UpdateStudentListener());
 		//
 		this.deleteStudentBtn = new JButton("Delete Student");
+		this.deleteStudentBtn.addActionListener(new DeleteStudentListener());
 
 		JPanel panel1 = new JPanel(new GridLayout(14, 2, 2, 2)); // one new row added for "Check" button
 		panel1.add(new JLabel("Student ID: "));
@@ -223,7 +234,7 @@ public class StudentLoanApp extends JFrame {
 	}
 
 	/**
-	 * Validate inputs in primary form Every field must be filled except for street
+	 * Validates inputs in primary form Every field must be filled except for street
 	 * number
 	 * 
 	 * @throws HN_MissingInfoInPrimaryForm
@@ -248,8 +259,10 @@ public class StudentLoanApp extends JFrame {
 		try {
 			String id = this.studentIDInput.getText();
 			boolean validID = HN_LoanTools.validateStudentID(id);
-			if (!validID)
+			if (!validID) {
+				HN_LoanTools.showInvalidStudentIDError();
 				throw new Exception("Invalid Student ID");
+			}
 			String student_id = this.studentIDInput.getText();
 			String surname = this.surnameInput.getText();
 			String middlename = this.middlenameInput.getText();
@@ -271,20 +284,26 @@ public class StudentLoanApp extends JFrame {
 			StudentDB.addNewStudent(student_id, surname, middlename, firstname, aptnumber, streetnumber, streetname,
 					city, province, postalcode, csl, osl);
 			this.messageBoardLabel.setText("Student is successfully added!");
-		} catch (Exception exc) {
-			System.out.println(exc.getMessage());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
 			this.messageBoardLabel.setText("Something went wrong! Try again!");
 		} finally {
 			clearInput();
 		}
 	}
 
+	/**
+	 * Grabs current form data to update student with specified ID.
+	 */
 	private void updateStudent() {
 		try {
 			String id = this.studentIDInput.getText();
 			boolean validID = HN_LoanTools.validateStudentID(id);
-			if (!validID)
+			if (!validID) {
+				HN_LoanTools.showInvalidStudentIDError();
 				throw new Exception("Invalid Student ID");
+			}
 			String student_id = this.studentIDInput.getText();
 			String surname = this.surnameInput.getText();
 			String middlename = this.middlenameInput.getText();
@@ -306,12 +325,89 @@ public class StudentLoanApp extends JFrame {
 			boolean success = StudentDB.updateStudent(student_id, surname, middlename, firstname, aptnumber,
 					streetnumber, streetname, city, province, postalcode, csl, osl);
 			if (!success) {
+				HN_LoanTools.showNoRecordFoundError();
 				this.messageBoardLabel.setText("Something went wrong! Try again!");
 			} else {
 				this.messageBoardLabel.setText("Student is successfully updated!");
 			}
-		} catch (Exception exc) {
-			System.out.println(exc.getMessage());
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+			this.messageBoardLabel.setText("Something went wrong! Try again!");
+		} finally {
+			clearInput();
+		}
+	}
+
+	/**
+	 * Checks if a student with given ID has already been in DB.
+	 * 
+	 * @throws SQLException
+	 * @throws HN_MissingIDException
+	 */
+	private void checkStudentID() throws SQLException, HN_MissingIDException {
+		String idInput = studentIDInput.getText();
+		if (idInput.isEmpty()) {
+			HN_LoanTools.showMissingIDError();
+			throw new HN_MissingIDException();
+		}
+		ResultSet rs = StudentDB.checkStudentId(idInput);
+		int rowCount = 0;
+		try {
+			// determine number of rows
+			if (rs.last()) {
+				rowCount = rs.getRow();
+				rs.beforeFirst();
+			}
+			if (rowCount > 0) {
+				// reset cursor to first result set
+				rs.first();
+				// populate input fields with data from db
+				addStudentBtn.setEnabled(false);
+				this.surnameInput.setText(rs.getString("surname"));
+				this.middlenameInput.setText(rs.getString("middle_name"));
+				this.firstnameInput.setText(rs.getString("first_name"));
+				this.aptNumberInput.setText(rs.getString("apt_number"));
+				this.streetNumberInput.setText(rs.getString("street_number"));
+				this.streetNameInput.setText(rs.getString("street_name"));
+				this.cityInput.setText(rs.getString("city"));
+				this.provinceInput.setText(rs.getString("province"));
+				this.postalcodeInput.setText(rs.getString("postal_code"));
+				this.cslInput.setText(rs.getString("csl_loan_amount"));
+				this.oslInput.setText(rs.getString("osl_loan_amount"));
+				this.messageBoardLabel.setText("Student already exists in database.");
+			} else {
+				this.addStudentBtn.setEnabled(true);
+				this.messageBoardLabel.setText("Student does not exist in database.");
+				clearInputExceptID();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Removes a student with specified ID from DB.
+	 */
+	private void deleteStudent() {
+		try {
+			String id = this.studentIDInput.getText();
+			if (id.isEmpty()) {
+				HN_LoanTools.showMissingIDError();
+				throw new HN_MissingIDException();
+			}
+			boolean validID = HN_LoanTools.validateStudentID(id);
+			if (!validID) {
+				HN_LoanTools.showInvalidStudentIDError();
+				throw new Exception("Invalid Student ID");
+			}
+			String student_id = this.studentIDInput.getText();
+			// delete from db
+			StudentDB.deleteStudent(student_id);
+			this.messageBoardLabel.setText("Delete!");
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
 			this.messageBoardLabel.setText("Something went wrong! Try again!");
 		} finally {
 			clearInput();
@@ -346,6 +442,37 @@ public class StudentLoanApp extends JFrame {
 	private class ProcessStudentListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent evt) {
+			// pull all students from DB
+			// populate an array list and pass to Repayments form
+			ResultSet rs = null;
+			try {
+				rs = StudentDB.getAll();
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+			ArrayList<Student> list = new ArrayList<>();
+			try {
+				while (rs.next()) {
+					String studentID = rs.getString("student_id");
+					String firstname = rs.getString("first_name");
+					String middlename = rs.getString("middle_name");
+					String surname = rs.getString("surname");
+					String aptnumber = rs.getString("apt_number");
+					String streetnumber = rs.getString("street_number");
+					String streetname = rs.getString("street_name");
+					String city = rs.getString("city");
+					String province = rs.getString("province");
+					String postalcode = rs.getString("postal_code");
+					double csl = Double.parseDouble(rs.getString("csl_loan_amount"));
+					double osl = Double.parseDouble(rs.getString("osl_loan_amount"));
+					Student student = new Student(studentID, surname, middlename, firstname, aptnumber, streetnumber,
+							streetname, city, province, postalcode, csl, osl);
+					list.add(student);
+				}
+				new RepaymentCalculationForm(list);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 
 		}
 	}
@@ -353,41 +480,13 @@ public class StudentLoanApp extends JFrame {
 	private class CheckStudentIDListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent evt) {
-			String idInput = studentIDInput.getText();
-			ResultSet rs = StudentDB.checkStudentId(idInput);
-			int rowCount = 0;
 			try {
-				// determine number of rows
-				if (rs.last()) {
-					rowCount = rs.getRow();
-					rs.beforeFirst();
-				}
-				if (rowCount > 0) {
-					// reset cursor to first set
-					rs.first();
-					addStudentBtn.setEnabled(false);
-					surnameInput.setText(rs.getString("surname"));
-					middlenameInput.setText(rs.getString("middle_name"));
-					firstnameInput.setText(rs.getString("first_name"));
-					aptNumberInput.setText(rs.getString("apt_number"));
-					streetNumberInput.setText(rs.getString("street_number"));
-					streetNameInput.setText(rs.getString("street_name"));
-					cityInput.setText(rs.getString("city"));
-					provinceInput.setText(rs.getString("province"));
-					postalcodeInput.setText(rs.getString("postal_code"));
-					cslInput.setText(rs.getString("csl_loan_amount"));
-					oslInput.setText(rs.getString("osl_loan_amount"));
-					;
-					messageBoardLabel.setText("Student already exists in database.");
-				} else {
-					addStudentBtn.setEnabled(true);
-					messageBoardLabel.setText("Student does not exist in database.");
-					clearInputExceptID();
-				}
+				checkStudentID();
 			} catch (SQLException e) {
 				e.printStackTrace();
+			} catch (HN_MissingIDException e) {
+				e.printStackTrace();
 			}
-
 		}
 	}
 
@@ -404,6 +503,11 @@ public class StudentLoanApp extends JFrame {
 			updateStudent();
 		}
 	}
-}
 
-// 0904995
+	private class DeleteStudentListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent evt) {
+			deleteStudent();
+		}
+	}
+}

@@ -1,8 +1,0 @@
-Next to StudentID field, place a "Check" button to verify if student id entered has existed before.
-@if yes => fill the rest of the form with data from DB + disable "Add" button + print "red" message
-@if no => program runs as normally, no button is disable + print "blue" message => "Add" is pressed => save new Student object to DB	
-
-New design: a text field to let admin enter a StudentID => jump right to the matching student
-
-When user presses "Process" button
-@fetch first student in DB, render his info in 2nd form
