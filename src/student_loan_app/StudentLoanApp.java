@@ -257,13 +257,12 @@ public class StudentLoanApp extends JFrame {
 	 */
 	private void addStudent() {
 		try {
-			String id = this.studentIDInput.getText();
-			boolean validID = HN_LoanTools.validateStudentID(id);
+			String student_id = this.studentIDInput.getText();
+			boolean validID = HN_LoanTools.validateStudentID(student_id);
 			if (!validID) {
 				HN_LoanTools.showInvalidStudentIDError();
 				throw new Exception("Invalid Student ID");
 			}
-			String student_id = this.studentIDInput.getText();
 			String surname = this.surnameInput.getText();
 			String middlename = this.middlenameInput.getText();
 			String firstname = this.firstnameInput.getText();
@@ -280,7 +279,7 @@ public class StudentLoanApp extends JFrame {
 			String postalcode = this.postalcodeInput.getText();
 			double csl = Double.parseDouble(this.cslInput.getText());
 			double osl = Double.parseDouble(this.oslInput.getText());
-			// add to db
+			// add to DB
 			StudentDB.addNewStudent(student_id, surname, middlename, firstname, aptnumber, streetnumber, streetname,
 					city, province, postalcode, csl, osl);
 			this.messageBoardLabel.setText("Student is successfully added!");
@@ -298,13 +297,12 @@ public class StudentLoanApp extends JFrame {
 	 */
 	private void updateStudent() {
 		try {
-			String id = this.studentIDInput.getText();
-			boolean validID = HN_LoanTools.validateStudentID(id);
+			String student_id = this.studentIDInput.getText();
+			boolean validID = HN_LoanTools.validateStudentID(student_id);
 			if (!validID) {
 				HN_LoanTools.showInvalidStudentIDError();
 				throw new Exception("Invalid Student ID");
 			}
-			String student_id = this.studentIDInput.getText();
 			String surname = this.surnameInput.getText();
 			String middlename = this.middlenameInput.getText();
 			String firstname = this.firstnameInput.getText();
@@ -391,20 +389,19 @@ public class StudentLoanApp extends JFrame {
 	 */
 	private void deleteStudent() {
 		try {
-			String id = this.studentIDInput.getText();
-			if (id.isEmpty()) {
+			String student_id = this.studentIDInput.getText();
+			if (student_id.isEmpty()) {
 				HN_LoanTools.showMissingIDError();
 				throw new HN_MissingIDException();
 			}
-			boolean validID = HN_LoanTools.validateStudentID(id);
+			boolean validID = HN_LoanTools.validateStudentID(student_id);
 			if (!validID) {
 				HN_LoanTools.showInvalidStudentIDError();
 				throw new Exception("Invalid Student ID");
 			}
-			String student_id = this.studentIDInput.getText();
 			// delete from db
 			StudentDB.deleteStudent(student_id);
-			this.messageBoardLabel.setText("Delete!");
+			this.messageBoardLabel.setText("Delete complete!");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
@@ -447,11 +444,7 @@ public class StudentLoanApp extends JFrame {
 			ResultSet rs = null;
 			try {
 				rs = StudentDB.getAll();
-			} catch (SQLException e1) {
-				e1.printStackTrace();
-			}
-			ArrayList<Student> list = new ArrayList<>();
-			try {
+				ArrayList<Student> list = new ArrayList<>();
 				while (rs.next()) {
 					String studentID = rs.getString("student_id");
 					String firstname = rs.getString("first_name");
